@@ -15,8 +15,13 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 
+import java.util.Timer;
+import java.util.TimerTask;
+
 public class MainActivity extends Activity implements View.OnTouchListener {
     DrawView drawView;
+    Timer myTimer;
+    MyTimerTask myTimerTask;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,6 +34,10 @@ public class MainActivity extends Activity implements View.OnTouchListener {
         this.requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(drawView);
+
+        myTimer = new Timer();
+        myTimerTask = new MyTimerTask();
+        myTimer.schedule(myTimerTask, 0, 1000);
 //        this.requestWindowFeature(Window.FEATURE_NO_TITLE);
 //        setContentView(R.layout.main);
     }
@@ -72,4 +81,13 @@ public class MainActivity extends Activity implements View.OnTouchListener {
 //
 //        return super.onOptionsItemSelected(item);
 //    }
+
+    class MyTimerTask extends TimerTask {
+        @Override
+        public void run() {
+            Log.d("TTW", "Timer!");
+            drawView.field.stepAllCreeps();
+            drawView.postInvalidate();
+        }
+    }
 }

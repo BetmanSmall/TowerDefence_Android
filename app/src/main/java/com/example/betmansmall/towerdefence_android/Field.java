@@ -29,7 +29,7 @@ public class Field {
             this.empty = true;
             this.busy = false;
         }
-    };
+    }
 
     Cell field[];
 //    Towers towers;
@@ -51,8 +51,9 @@ public class Field {
     int sizeCell;
 
 //    int mouseX, mouseY;
-//    int spawnPointX, spawnPointY;
-//    int exitPointX, exitPointY;
+    int spawnPointX, spawnPointY;
+    int exitPointX, exitPointY;
+    boolean CIRCLET8 = true;
 
     Field() {
         field = null;
@@ -79,13 +80,13 @@ public class Field {
 
 //            mouseX = -1;
 //            mouseY = -1;
-//            spawnPointX = -1;
-//            spawnPointY = -1;
-//            exitPointX = -1;
-//            exitPointY = -1;
+            spawnPointX = -1;
+            spawnPointY = -1;
+            exitPointX = -1;
+            exitPointY = -1;
         } else {
-            deleteField();
-            createField(newSizeX, newSizeY);
+//            deleteField();
+//            createField(newSizeX, newSizeY);
         }
     }
 
@@ -103,34 +104,37 @@ public class Field {
 
 //    void Field::setFaction(Faction* faction);
 
-//    boolean createSpawnPoint(int num, int x, int y) {
-//        for(int k = 0; k < creeps.getAmount(); k++)
-//        {
-//            Creep creep = creeps.getCreep(k);
-//            int creepX = creep.coorByCellX;
-//            int creepY = creep.coorByCellY;
-//            clearCreep(creepX, creepY);
-//        }
-//
-//        if(x == -1 && y == -1)
-//        {
-//            if(!isSetSpawnPoint())
-//                return false;
-//        }
-//        else
-//        {
-//            spawnPointX = x;
-//            spawnPointY = y;
-////        field[sizeX*y+x].spawn = true; // BAGS!!!!!
-////        field[sizeX*y+x].empty = false; // BAGS!!!!!
-//            clearBusy(x,y); // BAGS!!!!!
-//        }
-//        creeps.deleteMass();
-//        creeps.createMass(num);
-//        currentFinishedCreeps = 0;
-//        return true;
-//    }
-//    void Field::createExitPoint(int x, int y);
+    boolean createSpawnPoint(int num, int x, int y) {
+        for(int k = 0; k < creeps.getAmount(); k++) {
+            Creep creep = creeps.getCreep(k);
+            int creepX = creep.coorByCellX;
+            int creepY = creep.coorByCellY;
+            clearCreep(creepX, creepY);
+        }
+        if(x == -1 && y == -1) {
+            if(!isSetSpawnPoint())
+                return false;
+        } else {
+            spawnPointX = x;
+            spawnPointY = y;
+//        field[sizeX*y+x].spawn = true; // BAGS!!!!!
+//        field[sizeX*y+x].empty = false; // BAGS!!!!!
+            clearBusy(x, y); // BAGS!!!!!
+        }
+        creeps.deleteMass();
+        creeps.createMass(num);
+        currentFinishedCreeps = 0;
+        return true;
+    }
+
+    void createExitPoint(int x, int y) {
+        exitPointX = x;
+        exitPointY = y;
+//    field[sizeX*y+x].exit = true; // BAGS!!!!!
+//    field[sizeX*y+x].empty = false; // BAGS!!!!!
+        clearBusy(x, y); // BAGS!!!!!
+        waveAlgorithm(x, y);
+    }
 
     int getSizeX() {
         return sizeX;
@@ -166,14 +170,251 @@ public class Field {
     }
 
 //    bool Field::towersAttack();
-//    void Field::waveAlgorithm(int x, int y);
-//    void Field::waveStep(int x, int y, int step);
+
+    void waveAlgorithm() {
+        waveAlgorithm(-1, -1);
+    }
+
+    void waveAlgorithm(int x, int y) {
+        Log.d("TTW", "Field::waveAlgorithm(" + x + ", " + y + ");");
+        if(x == -1 && y == -1) {
+            if (isSetExitPoint()) {
+                waveAlgorithm(exitPointX, exitPointY);
+                return;
+            }
+        }
+
+        if(!containBusy(x, y) && !containTower(x, y))
+        {
+            for(int tmpX = 0; tmpX < getSizeX(); tmpX++)
+                for(int tmpY = 0; tmpY < getSizeY(); tmpY++)
+                    clearStepCell(tmpX, tmpY);
+
+            setStepCell(x, y, 1);
+
+            waveStep(x, y, 1);
+        }
+    }
+
+    void waveStep(int x, int y, int step) {
+        if(CIRCLET8) {
+            //------------3*3----------------
+            boolean mass[][] = new boolean[3][3];
+            int nextStep = step + 1;
+
+            for (int tmpY = -1; tmpY < 2; tmpY++)
+                for (int tmpX = -1; tmpX < 2; tmpX++)
+                    mass[tmpX + 1][tmpY + 1] = setNumOfCell(x + tmpX, y + tmpY, nextStep);
+
+            for (int tmpY = -1; tmpY < 2; tmpY++)
+                for (int tmpX = -1; tmpX < 2; tmpX++)
+                    if (mass[tmpX + 1][tmpY + 1])
+                        waveStep(x + tmpX, y + tmpY, nextStep);
+        } else {
+            //------------2*2----------------
+            boolean mass[] = new boolean[4];
+            int nextStep = step + 1;
+            int x1 = x - 1, x2 = x, x3 = x + 1;
+            int y1 = y - 1, y2 = y, y3 = y + 1;
+
+            mass[0] = setNumOfCell(x1, y2, nextStep);
+            mass[1] = setNumOfCell(x2, y1, nextStep);
+            mass[2] = setNumOfCell(x2, y3, nextStep);
+            mass[3] = setNumOfCell(x3, y2, nextStep);
+
+            if (mass[0])
+                waveStep(x1, y2, nextStep);
+            if (mass[1])
+                waveStep(x2, y1, nextStep);
+            if (mass[2])
+                waveStep(x2, y3, nextStep);
+            if (mass[3])
+                waveStep(x3, y2, nextStep);
+        }
+    }
+
 //    void Field::setMousePress(int x, int y);
 //    bool Field::getMousePress(int x, int y);
-//    bool Field::isSetSpawnPoint(int x, int y);
-//    bool Field::isSetExitPoint(int x, int y);
-//    int Field::stepAllCreeps();
-//    int Field::stepOneCreep(int num);
+
+    boolean isSetSpawnPoint() {
+        return isSetSpawnPoint(-1, -1);
+    }
+
+    boolean isSetSpawnPoint(int x, int y) {
+        if(spawnPointX != -1 && spawnPointY != -1) {
+            if((x == spawnPointX && y == spawnPointY) || (x == -1 && y == -1)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    boolean isSetExitPoint() {
+        return isSetExitPoint(-1, -1);
+    }
+
+    boolean isSetExitPoint(int x, int y) {
+        if(exitPointX != -1 && exitPointY != -1) {
+            if((x == exitPointX && y == exitPointY) || (x == -1 && y == -1)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    int stepAllCreeps() {
+        boolean allDead = true;
+        for(int k = 0; k < creeps.getAmount(); k++) {
+            int result = stepOneCreep(k);
+            if(result != -2)
+                allDead = false;
+
+            if(result == 1) {
+                currentFinishedCreeps++;
+                if(currentFinishedCreeps >= gameOverLimitCreeps)
+                    return 1;
+            }
+            else if(result == -1)
+                return -1;
+        }
+
+        if(allDead)
+            return 2;
+        else
+            return 0;
+    }
+
+    int stepOneCreep(int creepId) {
+        Log.d("TTW", "Field::stepOneCreep(" + creepId + ")");
+        Creep tmpCreep = creeps.getCreep(creepId);
+        if(tmpCreep.alive) {
+//            if(tmpCreep->animationCurrIter < tmpCreep->animationMaxIter) {
+////            qDebug() << "tmpCreep->animationCurrIter: " << tmpCreep << "->" << tmpCreep->animationCurrIter;
+//                tmpCreep->pixmap = tmpCreep->activePixmaps[tmpCreep->animationCurrIter++];
+////            tmpCreep->animationCurrIter = tmpCreep->animationCurrIter+1;
+//            }
+//            else
+//            {
+                int currX = tmpCreep.coorByCellX;
+                int currY = tmpCreep.coorByCellY;
+
+                int exitX = currX, exitY = currY;
+
+                int min = getNumStep(currX,currY);
+                if(min == 1)
+                    return 1;
+                if(min == 0)
+                    return -1;
+
+                int defaultStep = min;
+                //--------------Looking specific cell-----------------------
+                for(int tmpY = -1; tmpY < 2; tmpY++)
+                    for(int tmpX = -1; tmpX < 2; tmpX++)
+                        if(!(tmpX == 0 && tmpY == 0)) {
+                            int num = getNumStep(currX + tmpX, currY + tmpY);
+//                            Log.d("TTW", "stepOneCreep() -- num: " + num);
+                            if(num <= min && num != 0) {
+                                if(num == min) {
+                                    if( ((int) (Math.random()*2)) == 1) {
+                                        exitX = currX + tmpX;
+                                        exitY = currY + tmpY;
+                                    }
+                                } else if(num == defaultStep-1) {
+                                    exitX = currX + tmpX;
+                                    exitY = currY + tmpY;
+                                    min = num;
+                                }
+                            }
+                        }
+                //-----------------------------------------------------------
+
+                if(exitX != currX || exitY != currY)
+                {
+                    Log.d("TTW", "stepOneCreep() -- exitX: " + exitX + " exitY: " + exitY);
+                    Log.d("TTW", "stepOneCreep() -- currX: " + currX + " currY: " + currY);
+
+                    clearCreep(currX, currY, tmpCreep);
+//                    tmpCreep->lastX = currX;
+//                    tmpCreep->lastY = currY;
+                    tmpCreep.coorByCellX = exitX;
+                    tmpCreep.coorByCellY = exitY;
+                    tmpCreep.number = min;
+//                    tmpCreep->animationCurrIter = 0;
+//
+//                    if(exitX < currX && exitY < currY)
+//                    {
+//                        tmpCreep->animationMaxIter = tmpCreep->defUnit->walk_up_left.size();
+//                        tmpCreep->activePixmaps = tmpCreep->defUnit->walk_up_left;
+//                        tmpCreep->direction = DirectionUpLeft;
+//                    }
+//                    else if(exitX == currX && exitY < currY)
+//                    {
+//                        tmpCreep->animationMaxIter = tmpCreep->defUnit->walk_up.size();
+//                        tmpCreep->activePixmaps = tmpCreep->defUnit->walk_up;
+//                        tmpCreep->direction = DirectionUp;
+//                    }
+//                    else if(exitX > currX && exitY < currY)
+//                    {
+//                        tmpCreep->animationMaxIter = tmpCreep->defUnit->walk_up_right.size();
+//                        tmpCreep->activePixmaps = tmpCreep->defUnit->walk_up_right;
+//                        tmpCreep->direction = DirectionUpRight;
+//                    }
+//                    else if(exitX < currX && exitY == currY)
+//                    {
+//                        tmpCreep->animationMaxIter = tmpCreep->defUnit->walk_left.size();
+//                        tmpCreep->activePixmaps = tmpCreep->defUnit->walk_left;
+//                        tmpCreep->direction = DirectionLeft;
+//                    }
+//                    else if(exitX > currX && exitY == currY)
+//                    {
+//                        tmpCreep->animationMaxIter = tmpCreep->defUnit->walk_right.size();
+//                        tmpCreep->activePixmaps = tmpCreep->defUnit->walk_right;
+//                        tmpCreep->direction = DirectionRight;
+//                    }
+//                    else if(exitX < currX && exitY > currY)
+//                    {
+//                        tmpCreep->animationMaxIter = tmpCreep->defUnit->walk_down_left.size();
+//                        tmpCreep->activePixmaps = tmpCreep->defUnit->walk_down_left;
+//                        tmpCreep->direction = DirectionDownLeft;
+//                    }
+//                    else if(exitX == currX && exitY > currY)
+//                    {
+//                        tmpCreep->animationMaxIter = tmpCreep->defUnit->walk_down.size();
+//                        tmpCreep->activePixmaps = tmpCreep->defUnit->walk_down;
+//                        tmpCreep->direction = DirectionDown;
+//                    }
+//                    else if(exitX > currX && exitY > currY)
+//                    {
+//                        tmpCreep->animationMaxIter = tmpCreep->defUnit->walk_down_right.size();
+//                        tmpCreep->activePixmaps = tmpCreep->defUnit->walk_down_right;
+//                        tmpCreep->direction = DirectionDownRight;
+//                    }
+////                qDebug() << "tmpCreep->animationMaxIter: " << tmpCreep << "->" << tmpCreep->animationMaxIter;
+//                    tmpCreep->pixmap = tmpCreep->activePixmaps[0];
+//
+                    setCreep(exitX, exitY, tmpCreep);
+                } else {
+                    Log.d("TTW", "stepOneCreep() -- BAD");
+                    return 0;
+                }
+//            }
+        }
+//        else if(tmpCreep->preDeath)
+//        {
+//            if(tmpCreep->animationCurrIter < tmpCreep->animationMaxIter)
+//            {
+////            qDebug() << "tmpCreep->animationCurrIter: " << tmpCreep << "->" << tmpCreep->animationCurrIter;
+//                tmpCreep->pixmap = tmpCreep->activePixmaps[tmpCreep->animationCurrIter++];
+////            tmpCreep->animationCurrIter = tmpCreep->animationCurrIter+1;
+//            }
+//            else
+//                tmpCreep->preDeath = false;
+//        }
+//        else
+//            return -2;
+
+        return 0;
+    }
 
     int getNumStep(int x, int y) {
         if(x >= 0 && x < getSizeX()) {
@@ -234,11 +475,7 @@ public class Field {
 
     boolean containCreep(int x, int y) {
 //        return containCreep(x, y, null);
-        if(field[sizeX*y + x].creep != null) {
-            return true;
-        } else {
-            return false;
-        }
+        return field[sizeX * y + x].creep != null;
     }
 
     boolean containCreep(int x, int y, Creep creep) {

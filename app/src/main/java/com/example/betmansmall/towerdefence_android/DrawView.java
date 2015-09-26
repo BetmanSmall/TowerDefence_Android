@@ -10,7 +10,7 @@ import android.view.View;
 public class DrawView extends View {
     Paint paint = new Paint();
 
-    Field field = new Field();
+    public Field field = new Field();
 
     public DrawView(Context context) {
         super(context);
@@ -19,7 +19,7 @@ public class DrawView extends View {
 //        Log.d("TTW", "getWidth(): " + getWidth());
 //        Log.d("TTW", "getHeight(): " + getHeight());
 
-//        int sizeCell = 32;
+        int sizeCell = 32;
 //        int sizeX = (int) (getWidth()/sizeCell); // 25; // 65, 120
 //        int sizeY = (int) (getHeight()/sizeCell); // 11; // 30, 60
         int sizeX = 25; // 65, 120
@@ -27,23 +27,40 @@ public class DrawView extends View {
 
         field = new Field();
         field.createField(sizeX, sizeY); // 65, 30
-//        field.setSizeCell(sizeCell);
+        field.setSizeCell(sizeCell);
 
         Log.d("TTW", "field.sizeX(): " + field.getSizeX());
         Log.d("TTW", "field.sizeY(): " + field.getSizeY());
-
-        int defaultNumCreateCreeps = 10;
-        int numCreepsK = 0;
-        for(int y = 0; y < field.getSizeY(); y++)
-            for(int x = 0; x < field.getSizeX(); x++)
-                if(Math.random()*101 <= 20)
-//                    if(numCreepsK++ < defaultNumCreateCreeps)
-                        field.setCreep(x, y);
 
         for(int y = 0; y < field.getSizeY(); y++)
             for(int x = 0; x < field.getSizeX(); x++)
                 if(Math.random()*101 <= 30)
                     field.setBusy(x, y);
+
+//        for(int x = field.getSizeX(); x >= 0; x--)
+//            for(int y = field.getSizeY(); y >= 0; y--)
+//                if(rand()%101 <= 10)
+//                    field.setTower(x, y);
+
+        int defaultNumCreateCreeps = 10;
+//        int numCreepsK = 0;
+//        for(int y = 0; y < field.getSizeY(); y++)
+//            for(int x = 0; x < field.getSizeX(); x++)
+//                if(Math.random()*101 <= 20)
+//                    if(numCreepsK++ < defaultNumCreateCreeps)
+//                        field.setCreep(x, y);
+
+        field.setBusy(0, 0);
+        field.setBusy(1, 0);
+        field.setBusy(1, 1);
+        field.setBusy(0, 1);
+
+        field.createSpawnPoint(defaultNumCreateCreeps, 0, 0);
+        field.createExitPoint(field.getSizeX()-1, field.getSizeY() - 1);
+
+        field.setCreep(0, 0);
+
+//        loadMap(TOWER_DEFENCE_PATH + "maps/arcticv1.tmx");
     }
 
     public void mousePressEvent(float mouseX, float mouseY) {
@@ -65,11 +82,15 @@ public class DrawView extends View {
             }
 
         Log.d("TTW", "mousePressEvent() -- mouseX: " + x + " mouseY: " + y);
+//        field.waveAlgorithm(x, y);
         if(field.containEmpty(x, y)) {
             field.setBusy(x, y);
         } else if(field.containBusy(x, y)) {
             field.clearBusy(x, y);
         }
+
+        field.waveAlgorithm();
+
         invalidate();
     }
 
@@ -93,6 +114,10 @@ public class DrawView extends View {
 //        return false;
 //    }
 
+    public void repaint() {
+        invalidate();
+    }
+
     @Override
     public void onDraw(Canvas canvas) {
         Log.d("TTW", "onDraw();");
@@ -110,6 +135,7 @@ public class DrawView extends View {
         drawGrid(canvas);
         drawRelief(canvas);
         drawCreeps(canvas);
+        drawStepsAndMouse(canvas);
 
 //        canvas.drawLine(0, 0, getWidth(), getHeight(), paint);
 //        canvas.drawLine(getWidth(), 0, 0, getHeight(), paint);
@@ -170,7 +196,7 @@ public class DrawView extends View {
     }
 
     public void drawCreeps(Canvas canvas) {
-        Log.d("TTW", "drawCreeps(1);");
+//        Log.d("TTW", "drawCreeps(1);");
         int mainCoorMapX = field.getMainCoorMapX();
         int mainCoorMapY = field.getMainCoorMapY();
         int spaceWidget = field.getSpaceWidget();
@@ -180,12 +206,12 @@ public class DrawView extends View {
         int fieldY = field.getSizeY();
 
         for(int y = 0; y < fieldY; y++) {
-            Log.d("TTW", "drawCreeps(2);");
+//            Log.d("TTW", "drawCreeps(2);");
             for(int x = 0; x < fieldX; x++) {
-                Log.d("TTW", "drawCreeps(3);");
+//                Log.d("TTW", "drawCreeps(3);");
 //                int num = field.containCreep(x, y);
                 if(field.containCreep(x, y)) {
-                    Log.d("TTW", "drawCreeps(4);");
+//                    Log.d("TTW", "drawCreeps(4);");
                     float pxlsX = mainCoorMapX + spaceWidget + x*sizeCell;//+1;
                     float pxlsY = mainCoorMapY + spaceWidget + y*sizeCell;// - sizeCell/2;//+1;
                     float localSizeCell = sizeCell;//-1;
@@ -242,6 +268,47 @@ public class DrawView extends View {
 //                        }
 //                    }
                 }
+            }
+        }
+    }
+
+    void drawStepsAndMouse(Canvas canvas) {
+        int mainCoorMapX = field.getMainCoorMapX();
+        int mainCoorMapY = field.getMainCoorMapY();
+        int spaceWidget = field.getSpaceWidget();
+        int sizeCell = field.getSizeCell();
+
+//        p.setPen(QColor(255,0,0));
+//        paint.setARGB(255, 255, 0, 0);
+        paint.setColor(Color.RED);
+
+        int fieldX = field.getSizeX();
+        int fieldY = field.getSizeY();
+
+        for(int y = 0; y < fieldY; y++)
+        {
+            for(int x = 0; x < fieldX; x++)
+            {
+                int pxlsX = mainCoorMapX + spaceWidget + x*sizeCell+1;
+                int pxlsY = mainCoorMapY + spaceWidget + y*sizeCell+1;
+                int localSizeCell = sizeCell-1;
+                int localSpaceCell = sizeCell/4;
+
+//                p.drawPixmap(sizeCell, 0, global_pixmap.width(), global_pixmap.height(), global_pixmap);
+
+                if(field.getStepCell(x, y) != 0) {
+//                    p.drawText(pxlsX + sizeCell / 2 - 5, pxlsY + sizeCell / 2 + 5, QString("%1").arg(field.getStepCell(x, y)));
+                    String str = String.valueOf(field.getStepCell(x, y));
+                    canvas.drawText(str, pxlsX + sizeCell / 2 - 5, pxlsY + sizeCell / 2 + 5, paint);
+                }
+
+//                if(field.isSetSpawnPoint(x,y)) {
+//                    p.fillRect(pxlsX + localSpaceCell, pxlsY + localSpaceCell, localSizeCell - 2 * (localSpaceCell), localSizeCell - 2 * (localSpaceCell), QColor(255, 162, 0));
+//                }
+//
+//                if(field.isSetExitPoint(x, y)) {
+//                    p.fillRect(pxlsX + localSpaceCell, pxlsY + localSpaceCell, localSizeCell - 2 * (localSpaceCell), localSizeCell - 2 * (localSpaceCell), QColor(0, 255, 0));
+//                }
             }
         }
     }
