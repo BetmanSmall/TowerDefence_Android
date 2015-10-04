@@ -1,6 +1,7 @@
 package com.example.betmansmall.towerdefence_android.Graphics;
 
 import android.app.Activity;
+import android.graphics.PixelFormat;
 import android.graphics.Point;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
@@ -34,8 +35,11 @@ public class GraphicsMenu extends Activity {
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
         glView = new GLSurfaceView(this);
-        glView.setEGLConfigChooser(8 , 8, 8, 8, 16, 0);
+        glView.setZOrderOnTop(true);
+        glView.setEGLConfigChooser(8, 8, 8, 8, 16, 0);
+        glView.getHolder().setFormat(PixelFormat.TRANSLUCENT);
         glView.setRenderer(simpleRenderer);
+        //glView.setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);
         setContentView(glView);
     }
 
