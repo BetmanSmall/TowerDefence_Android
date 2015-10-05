@@ -198,8 +198,6 @@ public class SimpleRenderer implements GLSurfaceView.Renderer {
         animBuffer.put(5,0.0f);
         animBuffer.put(6, 1f - 6f / 7f);
         animBuffer.put(7, 1f - 3f / 4f);
-        gl.glEnable(GL10.GL_BLEND);
-        gl.glBlendFunc(GL10.GL_SRC_ALPHA, GL10.GL_ONE_MINUS_SRC_ALPHA);
         gl.glEnable(GL10.GL_TEXTURE_2D);
         gl.glBindTexture(GL10.GL_TEXTURE_2D, glIdAnim1);
         FloatBuffer newFloat = createAndFillFloat(new float[]{
