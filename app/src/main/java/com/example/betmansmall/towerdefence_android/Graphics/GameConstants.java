@@ -57,4 +57,10 @@ public class GameConstants {
     public void setmContext(Context mContext) {
         this.mContext = mContext;
     }
+
+
+    public int widthToInt(float width) { return (int)((1 + width)*getWindowWidth() / 2);}
+    public int heightToInt(float height) { return (int)((1 + height)*getWindowHeight() / 2);}
+    public float widthToFloat(float width) { return width*2/ getWindowWidth() - 1;}
+    public float heightToFloat(float height) { return height*2/ getWindowHeight() - 1;}
 }

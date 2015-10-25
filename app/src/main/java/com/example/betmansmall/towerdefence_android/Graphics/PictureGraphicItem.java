@@ -7,6 +7,7 @@ import android.util.Log;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.FloatBuffer;
 
 import javax.microedition.khronos.opengles.GL10;
 
@@ -17,6 +18,8 @@ public class PictureGraphicItem extends GraphicItem {
 
     private int recourseImage = 0;
     private int glRecourseImage;
+
+    protected FloatBuffer floatBufferOfPicture; //buffer of capture image
 
     PictureGraphicItem(int intXDown, int intYDown, int intXUp, int intYUp) {
         super(intXDown, intYDown, intXUp, intYUp);
@@ -51,6 +54,33 @@ public class PictureGraphicItem extends GraphicItem {
          this.recourseImage = recourseImage;
         else
             Log.d("Error","You cannot initialze recourse image twice");
+    }
+
+    public void initFloatBufferOfPicture(float[] floatArray) {
+        if(floatArray == null)
+            floatBufferOfPicture = createAndFillFloat(new float[]{
+                    // x,y
+                    // so, default view point (all picture).
+                    // If sprite, should be redefine in putFloatBufferOfPicture()
+                    0.0f, 1.0f,
+                    0.0f, 0.0f,
+                    1.0f, 0.0f,
+                    1.0f, 1.0f,
+            });
+        else
+            floatBufferOfPicture = createAndFillFloat(
+                    floatArray
+            );
+    }
+
+    public void putFloatBufferOfPicture(int[] indexArray, float[] pointArray) {
+        for(int i = 0; i < indexArray.length; i++) {
+            floatBufferOfPicture.put(indexArray[i],pointArray[i]);
+        }
+    }
+
+    public FloatBuffer getFloatBufferOfPiture() {
+        return floatBufferOfPicture;
     }
 
     public void loadTextureToGl(GL10 gl) {

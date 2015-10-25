@@ -17,7 +17,6 @@ import javax.microedition.khronos.opengles.GL10;
 public class GraphicItem {
     public static final int SHORT_FIELD_SIZE    = 2;
     public static final int FLOAT_FIELD_SIZE    = 4;
-    protected FloatBuffer floatBufferOfPicture; //buffer of capture image
     protected FloatBuffer floatBufferOfPosition; //buffer of position image on screen
     protected ShortBuffer shortBufferOfIndexes; //buffer of index position
 
@@ -29,10 +28,14 @@ public class GraphicItem {
     private int pxXCoordianteScreenDown;
     private int pxYCoordinateScreenUp;
     private int pxXCoordianteScreenUp;
+    private int pxZCoordinateScreenUp;
+    private int pxZCoordinateScreenDown;
     private float fYCoordinateScreenDown;
     private float fXCoordianteScreenDown;
     private float fYCoordinateScreenUp;
     private float fXCoordianteScreenUp;
+    private float fZCoordinateScreenUp;
+    private float fZCoordinateScreenDown;
 
     //intYDown + intXDown - left down corner of picture
     //intYUp + intYUp - right up corner
@@ -42,42 +45,19 @@ public class GraphicItem {
         this.pxYCoordinateScreenUp = intYUp;
         this.pxXCoordianteScreenDown = intXDown;
         this.pxXCoordianteScreenUp = intXUp;
-        this.fYCoordinateScreenDown = heightToFloat(intYDown);
-        this.fYCoordinateScreenUp = heightToFloat(intYUp);
-        this.fXCoordianteScreenDown = widthToFloat(intXDown);
-        this.fXCoordianteScreenUp = widthToFloat(intXUp);
+        this.fYCoordinateScreenDown = gameConstants.heightToFloat(intYDown);
+        this.fYCoordinateScreenUp = gameConstants.heightToFloat(intYUp);
+        this.fXCoordianteScreenDown = gameConstants.widthToFloat(intXDown);
+        this.fXCoordianteScreenUp = gameConstants.widthToFloat(intXUp);
+    }
+
+    GraphicItem() {
+
     }
 
     //TODO Should be overrided in subclass or make it as design
     public void drawGraphicItem(GL10 _gl) {
         return;
-    }
-
-    public void initFloatBufferOfPicture(float[] floatArray) {
-        if(floatArray == null)
-            floatBufferOfPicture = createAndFillFloat(new float[]{
-                // x,y
-                // so, default view point (all picture).
-                // If sprite, should be redefine in putFloatBufferOfPicture()
-                0.0f, 1.0f,
-                0.0f, 0.0f,
-                1.0f, 0.0f,
-                1.0f, 1.0f,
-        });
-        else
-            floatBufferOfPicture = createAndFillFloat(
-                    floatArray
-            );
-    }
-
-    public void putFloatBufferOfPicture(int[] indexArray, float[] pointArray) {
-        for(int i = 0; i < indexArray.length; i++) {
-            floatBufferOfPicture.put(indexArray[i],pointArray[i]);
-        }
-    }
-
-    public FloatBuffer getFloatBufferOfPiture() {
-        return floatBufferOfPicture;
     }
 
     public void initFloatBufferOfPosition(float[] floatArray) {
@@ -138,7 +118,7 @@ public class GraphicItem {
         return result;
     }
 
-    private final FloatBuffer createAndFillFloat(float[] _massive) {
+    public final FloatBuffer createAndFillFloat(float[] _massive) {
         int len = _massive.length;
         ByteBuffer bb = ByteBuffer.allocateDirect(len * FLOAT_FIELD_SIZE);
         bb.order(ByteOrder.nativeOrder());
@@ -148,12 +128,15 @@ public class GraphicItem {
         return result;
     }
 
+    int sizeShortBuf;
+    public void drawLines(GL10 gl) {
+        gl.glColor4f(0, 0, 0, 1);
+        gl.glVertexPointer(3, GL10.GL_FLOAT, 0, floatBufferOfPosition);
+        gl.glEnableClientState(GL10.GL_VERTEX_ARRAY);
+        gl.glDrawElements(GL10.GL_LINES, sizeShortBuf, GL10.GL_UNSIGNED_SHORT, shortBufferOfIndexes);
+    }
 
     public boolean isDrawPicture() { return isDrawPicture; }
     public void setIsDrawPicture(boolean isDrawPicture) { this.isDrawPicture = isDrawPicture; }
 
-    private int widthToInt(float width) { return (int)((1 + width)*gameConstants.getWindowWidth() / 2);}
-    private int heightToInt(float height) { return (int)((1 - height)*gameConstants.getWindowHeight() / 2);}
-    private float widthToFloat(float width) { return width*2/ gameConstants.getWindowWidth() - 1;}
-    private float heightToFloat(float height) { return height*2/ gameConstants.getWindowHeight() - 1;}
 }
