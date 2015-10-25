@@ -16,6 +16,7 @@ import javax.microedition.khronos.opengles.GL10;
 public class SimpleRenderer implements GLSurfaceView.Renderer {
     GameConstants gameConstants;
 
+    private boolean isSwtichActived = false;
     private long loopStart =0;
     private long loopEnd = 0;
     private long loopRunTime = 0;
@@ -76,17 +77,18 @@ public class SimpleRenderer implements GLSurfaceView.Renderer {
 
         grid = new GraphicItem();
         grid.initFloatBufferOfPosition(new float[]{
-                0f,0f,0f,
-                1f,1f,0f,
-                -1f,1f,0f,
-                0f,0f,0f,
+                0f, 0f, 0f,
+                1f, 1f, 0f,
+                -1f, 1f, 0f,
+                0f, 0f, 0f,
         });
         grid.initShortBufferOfIndexes(new short[]{0, 1, 2, 3});
-        grid.setIsDrawPicture(true);
+        //grid.setIsDrawPicture(true);
         grid.sizeShortBuf = 4;
 
         //TODO test view should be changed
-        mainMenu = new AnimationGraphicItem(250,0,500,gameConstants.heightToInt(0.6f));
+        mainMenu = new AnimationGraphicItem(gameConstants.widthToInt(-0.18f),gameConstants.heightToInt(-1f),
+                gameConstants.widthToInt(0.18f),gameConstants.heightToInt(0.14f));
         mainMenu.lazyDefaultInitialization(_gl,R.drawable.mainmennu);
     }
 
@@ -177,22 +179,28 @@ public class SimpleRenderer implements GLSurfaceView.Renderer {
     }
 
     private void switchMenu(final AnimationGraphicItem _old,final AnimationGraphicItem _new) {
-        // TODO: 25.10.2015 costile
-        _old.setStatus(AnimationGraphicItem.Status.MENU_SLIDE_DOWN);
-        new Thread() {
+        // TODO: 25.10.2015 Should be redesigned in future
+        if(!isSwtichActived) {
+            isSwtichActived = true;
+            _old.setStatus(AnimationGraphicItem.Status.MENU_SLIDE_DOWN);
+            new Thread() {
                 AnimationGraphicItem __old = _old;
                 AnimationGraphicItem __new = _new;
-            @Override
-            public void run() {
-                while(__old.getStatus() != AnimationGraphicItem.Status.MENU_NORMAL)
-                    ;
-                __old.setIsDrawPicture(false);
-                __new.setLowerPositionOfMenu();
-                __new.setIsDrawPicture(true);
-                __new.setStatus(AnimationGraphicItem.Status.MENU_SLIDE_UP);
-            }
-        }.start();
 
+                @Override
+                public void run() {
+                    while (__old.getStatus() != AnimationGraphicItem.Status.MENU_NORMAL)
+                        ;
+                    __old.setIsDrawPicture(false);
+                    __new.setLowerPositionOfMenu(__old.getFloatBufferOfPosition());
+                    __new.setIsDrawPicture(true);
+                    __new.setStatus(AnimationGraphicItem.Status.MENU_SLIDE_UP);
+                    while (__new.getStatus() != AnimationGraphicItem.Status.MENU_NORMAL)
+                        ;
+                    isSwtichActived = false;
+                }
+            }.start();
+        }
     }
 
     public void onTouchEvent(final MotionEvent event) {

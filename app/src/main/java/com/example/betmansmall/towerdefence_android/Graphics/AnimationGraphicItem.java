@@ -2,6 +2,8 @@ package com.example.betmansmall.towerdefence_android.Graphics;
 
 import android.util.Log;
 
+import java.nio.FloatBuffer;
+
 import javax.microedition.khronos.opengles.GL10;
 
 /**
@@ -10,8 +12,11 @@ import javax.microedition.khronos.opengles.GL10;
 //Should be done
 public class AnimationGraphicItem extends PictureGraphicItem {
 
-    private static float step = 0.05f;
-    private static float finalStateOfOffset = -0.95f;
+    private final static float step = 0.04f;
+    private final static float finalStateOfOffsetDown = -0.98f;
+    private final static float finalStateOfOffsetUp = 0.14f;
+    private int actionCount = 0;
+    private final static int maxActionCount = 28; // (0.98+0.14)/0.04
     public enum Status {
         MENU_SLIDE_DOWN,
         MENU_SLIDE_UP,
@@ -32,21 +37,17 @@ public class AnimationGraphicItem extends PictureGraphicItem {
         return animationStatus;
     }
 
-    public void setLowerPositionOfMenu() {
-        // TODO: 25.10.2015 costile
-        //putFloatBufferOfPosition();
+    public void setLowerPositionOfMenu(FloatBuffer _fb) {
+        floatBufferOfPosition = _fb;
     }
 
     private void checkToMenuAnimationDone() {
         switch (animationStatus) {
             case MENU_SLIDE_DOWN:
-                if(floatBufferOfPosition.get(4) <= finalStateOfOffset ) {
-                    animationStatus = Status.MENU_NORMAL;
-                }
-                break;
             case MENU_SLIDE_UP:
-                if(floatBufferOfPosition.get(4) >= 0.6f) { // TODO: 25.10.2015 Hardocded. Max height of menu
+                if(actionCount == maxActionCount) {
                     animationStatus = Status.MENU_NORMAL;
+                    actionCount = -1;
                 }
                 break;
             case MENU_NORMAL:
@@ -69,6 +70,7 @@ public class AnimationGraphicItem extends PictureGraphicItem {
                         floatBufferOfPosition.get(10) - step,
                 });
                 checkToMenuAnimationDone();
+                actionCount++;
                 break;
             case MENU_SLIDE_UP:
                 putFloatBufferOfPosition(new int[]{
@@ -80,6 +82,7 @@ public class AnimationGraphicItem extends PictureGraphicItem {
                         floatBufferOfPosition.get(10) + step,
                 });
                 checkToMenuAnimationDone();
+                actionCount++;
                 break;
             case MENU_NORMAL:
                 break;
