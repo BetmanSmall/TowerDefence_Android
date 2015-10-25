@@ -12,11 +12,11 @@ import javax.microedition.khronos.opengles.GL10;
 //Should be done
 public class AnimationGraphicItem extends PictureGraphicItem {
 
-    private final static float step = 0.04f;
+    private final static float step = 0.02f;
     private final static float finalStateOfOffsetDown = -0.98f;
     private final static float finalStateOfOffsetUp = 0.14f;
     private int actionCount = 0;
-    private final static int maxActionCount = 28; // (0.98+0.14)/0.04
+    private final static int maxActionCount = 56; // (0.98+0.14)/0.04
     public enum Status {
         MENU_SLIDE_DOWN,
         MENU_SLIDE_UP,
