@@ -12,8 +12,10 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewStub;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.Button;
 
 import java.util.Timer;
 import java.util.TimerTask;
@@ -22,22 +24,39 @@ public class MainActivity extends Activity implements View.OnTouchListener {
     DrawView drawView;
     Timer myTimer;
     MyTimerTask myTimerTask;
+    Button changeInputMode;
+    static boolean inputMode = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        drawView = new DrawView(this);
+        this.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        setContentView(R.layout.main);
+
+        drawView = (DrawView) findViewById(R.id.view);//new DrawView(this);
         drawView.setOnTouchListener(this);
         drawView.setBackgroundColor(Color.WHITE);
 
-        this.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
-        setContentView(drawView);
+        changeInputMode = (Button) findViewById(R.id.button);
+        changeInputMode.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+               if(inputMode){
+                   inputMode = false;
+                   changeInputMode.setText("Input mode: buse");
+               }
+               else {
+                   inputMode = true;
+                   changeInputMode.setText("Input mode: creep");
+               }
+            }
+        });
 
         myTimer = new Timer();
         myTimerTask = new MyTimerTask();
-        myTimer.schedule(myTimerTask, 0, 1000);
+        myTimer.schedule(myTimerTask, 0, 100);
 //        this.requestWindowFeature(Window.FEATURE_NO_TITLE);
 //        setContentView(R.layout.main);
     }

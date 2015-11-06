@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
 
@@ -11,19 +12,36 @@ public class DrawView extends View {
     Paint paint = new Paint();
 
     public Field field = new Field();
+    private int gameCoordXForWhichCell;
+    private int gameCoordYForWhichCell;
 
     public DrawView(Context context) {
         super(context);
+        init(context);
+    }
+
+    public DrawView(Context context, AttributeSet attrs) {
+        super(context, attrs);
+        init(context);
+    }
+
+    public DrawView(Context context, AttributeSet attrs, int defStyle) {
+        super(context, attrs, defStyle);
+        init(context);
+    }
+
+
+    public void init(Context context) {
         paint.setColor(Color.BLACK);
 
 //        Log.d("TTW", "getWidth(): " + getWidth());
 //        Log.d("TTW", "getHeight(): " + getHeight());
 
-        int sizeCell = 32;
+        int sizeCell = 64;
 //        int sizeX = (int) (getWidth()/sizeCell); // 25; // 65, 120
 //        int sizeY = (int) (getHeight()/sizeCell); // 11; // 30, 60
-        int sizeX = 25; // 65, 120
-        int sizeY = 15; // 30, 60
+        int sizeX = 28; // 65, 120
+        int sizeY = 14; // 30, 60
 
         field = new Field();
         field.createField(sizeX, sizeY); // 65, 30
@@ -56,63 +74,56 @@ public class DrawView extends View {
         field.setBusy(0, 1);
 
         field.createSpawnPoint(defaultNumCreateCreeps, 0, 0);
-        field.createExitPoint(field.getSizeX()-1, field.getSizeY() - 1);
+        field.createExitPoint(field.getSizeX() - 1, field.getSizeY() - 1);
 
+        field.setCreep(0, 0);
+        field.setCreep(0, 0);
         field.setCreep(0, 0);
 
 //        loadMap(TOWER_DEFENCE_PATH + "maps/arcticv1.tmx");
     }
 
     public void mousePressEvent(float mouseX, float mouseY) {
-        int x = (int) mouseX;
-        int y = (int) mouseY;
+        gameCoordXForWhichCell = new Integer( (int) mouseX);
+        gameCoordYForWhichCell = new Integer( (int) mouseY);
+
+        if(whichCell(gameCoordXForWhichCell, gameCoordYForWhichCell)) {
+            Log.d("TTW", "mousePressEvent() -- mouseX: " + gameCoordXForWhichCell + " mouseY: " + gameCoordYForWhichCell);
+            if(MainActivity.inputMode) {
+                field.createExitPoint(gameCoordXForWhichCell, gameCoordYForWhichCell);
+//                field.waveAlgorithm(gameCoordXForWhichCell, gameCoordYForWhichCell);
+            } else {
+                if (field.containEmpty(gameCoordXForWhichCell, gameCoordYForWhichCell)) {
+                    field.setBusy(gameCoordXForWhichCell, gameCoordYForWhichCell);
+                } else if (field.containBusy(gameCoordXForWhichCell, gameCoordYForWhichCell)) {
+                    field.clearBusy(gameCoordXForWhichCell, gameCoordYForWhichCell);
+                }
+
+                field.waveAlgorithm();
+            }
+            invalidate();
+        }
+    }
+
+    public boolean whichCell(Integer mouseX, Integer mouseY) {
         int mainCoorMapX = field.getMainCoorMapX();
         int mainCoorMapY = field.getMainCoorMapY();
         int spaceWidget = field.getSpaceWidget();
         int sizeCell = field.getSizeCell();
 
         int tmpX, tmpY;
-        tmpX = ( (x+sizeCell - spaceWidget - mainCoorMapX) / sizeCell);
-        tmpY = ( (y+sizeCell - spaceWidget - mainCoorMapY) / sizeCell);
+        tmpX = ( (mouseX.intValue()+sizeCell - spaceWidget - mainCoorMapX) / sizeCell);
+        tmpY = ( (mouseY.intValue()+sizeCell - spaceWidget - mainCoorMapY) / sizeCell);
         if(tmpX > 0 && tmpX < field.getSizeX()+1)
             if(tmpY > 0 && tmpY < field.getSizeY()+1)
             {
-                x = tmpX-1;
-                y = tmpY-1;
+                gameCoordXForWhichCell = tmpX-1;
+                gameCoordYForWhichCell = tmpY-1;
+                return true;
             }
 
-        Log.d("TTW", "mousePressEvent() -- mouseX: " + x + " mouseY: " + y);
-//        field.waveAlgorithm(x, y);
-        if(field.containEmpty(x, y)) {
-            field.setBusy(x, y);
-        } else if(field.containBusy(x, y)) {
-            field.clearBusy(x, y);
-        }
-
-        field.waveAlgorithm();
-
-        invalidate();
+        return false;
     }
-
-//    public boolean whichCell(int &mouseX, int &mouseY) {
-//        int mainCoorMapX = field.getMainCoorMapX();
-//        int mainCoorMapY = field.getMainCoorMapY();
-//        int spaceWidget = field.getSpaceWidget();
-//        int sizeCell = field.getSizeCell();
-//
-//        int tmpX, tmpY;
-//        tmpX = ( (mouseX+sizeCell - spaceWidget - mainCoorMapX) / sizeCell);
-//        tmpY = ( (mouseY+sizeCell - spaceWidget - mainCoorMapY) / sizeCell);
-//        if(tmpX > 0 && tmpX < field.getSizeX()+1)
-//            if(tmpY > 0 && tmpY < field.getSizeY()+1)
-//            {
-//                mouseX = tmpX-1;
-//                mouseY = tmpY-1;
-//                return true;
-//            }
-//
-//        return false;
-//    }
 
     public void repaint() {
         invalidate();
